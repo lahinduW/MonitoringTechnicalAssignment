@@ -1,0 +1,131 @@
+# Default values for alert-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: monitoring
+replicaCount: 1
+
+labels:
+  k8s-app: alertmanager
+  app.kubernetes.io/name: alertmanager
+  app.kubernetes.io/component: alertmanager
+
+commonAnnotations:
+  annotations: 
+    prometheus.io/scrape: 'true'
+
+
+image:
+  repository: quay.io/prometheus/alertmanager
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v0.22.2
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 65534
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9093
+
+volumeMounts:
+  - name: alertmanager-config
+    mountPath: /etc/config/alertmanager.yaml
+    subPath: alertmanager.yaml
+#  - name: alertmanager-storage-volume
+#    mountPath: /data/
+
+args:
+  - "--config.file=/etc/config/alertmanager.yaml"
+  - "--web.listen-address=:9093"
+#  - "--storage.path=/data"
+
+volumes:
+  - name: alertmanager-config
+    configMap:
+      defaultMode: 0666
+      name: alertmanager-config
+#  - name: alertmanager-storage-volume
+#    persistentVolumeClaim:
+#      claimName: monitoring-data-pvc
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+templates:
+  alertmanager.yml: |-
+    global:
+      slack_api_url: 'https://hooks.slack.com/services/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'
+    route:
+      receiver: 'slack-notifications'
+    receivers:
+    - name: 'slack-notifications'
+      slack_configs:
+      - channel: '#promethus-grafana-alert'
+        send_resolved: true
+    - name: 'email'
+      email_configs:
+      - to: lahindu@mail.com,prom.system.alerts@gmail.com
+        from: prom.system.alerts@gmail.com
+        smarthost: smtp.gmail.com:587
+        auth_username: prom.system.alerts@gmail.com
+        auth_identity: prom.system.alerts@gmail.com
+        auth_password: Amila32*

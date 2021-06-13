@@ -1,0 +1,138 @@
+# Default values for prometheus.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: monitoring
+replicaCount: 1
+
+labels:
+  k8s-app: prometheus
+  app.kubernetes.io/name: prometheus
+  app.kubernetes.io/component: prometheus
+
+commonAnnotations:
+  annotations: 
+    prometheus.io/scrape: 'true'
+
+image:
+  repository: quay.io/prometheus/prometheus
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v2.25.0
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+args:
+  - --config.file=/etc/prometheus/prometheus.yaml
+  - --web.console.libraries=/etc/prometheus/console_libraries
+  - --web.console.templates=/etc/prometheus/consoles
+  - --web.enable-lifecycle
+#  - --storage.tsdb.path=/data
+
+probs:
+  readinessProbe:
+    enabled: true
+    readinessProbe:
+      httpGet:
+        path: /-/ready
+        port: 9090
+      initialDelaySeconds: 30
+      timeoutSeconds: 30
+  livenessProbe:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /-/healthy
+        port: 9090
+      initialDelaySeconds: 30
+      timeoutSeconds: 30
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9090
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  requests:
+    cpu: 200m
+    memory: 1000Mi
+
+volumeMounts:
+  - name: config-file
+    mountPath: /etc/prometheus/prometheus.yaml
+    subPath: prometheus.yaml
+  - name: rules-file
+    mountPath: /etc/prometheus/rules.yaml
+    subPath: rules.yaml
+#  - name: prometheus-data
+#    mountPath: /data
+#    subPath: ""
+
+storageClassName: efs-sc
+
+requestsStorage: "1Gi"
+
+
+volumes:
+  - name: config-file
+    configMap:
+      name: prometheus-config
+  - name: rules-file
+    configMap:
+      name: prometheus-rules-config
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

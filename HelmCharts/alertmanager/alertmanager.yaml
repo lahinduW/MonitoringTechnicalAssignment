@@ -1,0 +1,43 @@
+route:
+  group_by: ['...']
+  receiver: opsslack
+  routes:
+  - matchers: 
+    - service="iot"
+    continue: true
+    receiver: devslack
+  - matchers:  
+    - service="iot"
+    continue: true
+    receiver: opsslack
+  - matchers:
+    - service="bigdata"
+    receiver: email
+receivers:
+- name: devslack
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/XXXXXX'  #replace url
+    channel: '#dev-alerts'
+    send_resolved: true
+    title: '[{{ .Status | toUpper }} ] - {{ .CommonLabels.HostIP }}'
+    text:  '{{ range $val := .Alerts }}
+             Alert: <https://prometheus.google.lk/#/alerts|{{ index $val.Annotations "summary" }}>
+             {{ end}}'
+- name: opsslack
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/XXXXXX'  #replace url
+    channel: '#ops-alerts'
+    send_resolved: true
+    title: '[{{ .Status | toUpper }} ] - {{ .CommonLabels.HostIP }}'
+    text:  '{{ range $val := .Alerts }}
+             Alert: <https://prometheus.google.lk/#/alerts|{{ index $val.Annotations "summary" }}>
+             {{ end}}'
+- name: email
+  email_configs:
+  - to: < toemail@address.com >
+    from: < fromemail1@address.com,fromemail2@address.com >
+    smarthost: smtp.gmail.com:587
+    auth_username: < user name >
+    auth_identity: < user identity >
+    auth_password: < password >
+    send_resolved: true

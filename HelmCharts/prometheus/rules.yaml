@@ -1,0 +1,21 @@
+groups:
+- name: demo-alerts
+  rules:
+  - alert: process-counter-cretical
+    expr: system_process_count > 150
+    for: 1m
+    labels: 
+      severity: critical
+      service: iot
+    annotations:
+      summary: Total Process Count is Cretical
+  - alert: process-counter-medium
+    expr: system_process_count > 125
+    for: 1m
+    labels: 
+      severity: medium
+      service: bigdata
+    annotations: 
+      summary: Total Process Count is Medium
+
+

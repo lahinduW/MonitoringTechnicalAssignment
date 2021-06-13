@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kube-state-metrics.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  {{- with .Values.labels}}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.commonAnnotations.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  {{- with .Values.labels}}
+  selector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+

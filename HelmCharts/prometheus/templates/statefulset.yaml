@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "prometheus.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  {{- with .Values.labels}}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.commonAnnotations.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  serviceName: {{ include "prometheus.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  podManagementPolicy: "Parallel"
+  updateStrategy:
+    type: "RollingUpdate"
+  selector:
+    {{- with .Values.labels}}
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  template:
+    metadata:
+      {{- with .Values.labels}}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "prometheus.fullname" . }}
+#      initContainers:
+#      - name: "init-chown-data"
+#        image: debian:9
+#        imagePullPolicy: Always
+#        command: ["chown", "-R", "65534:65534", "/data"]
+#        volumeMounts:
+#        - name: prometheus-data
+#          mountPath: /data
+#          subPath: ""
+      containers:
+        - name: {{ include "prometheus.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.args}}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          {{- if .Values.probs.readinessProbe.enabled }}
+          {{- with .Values.probs.readinessProbe.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.probs.livenessProbe.enabled }}
+          {{- with .Values.probs.livenessProbe.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | nindent 10 }}
+      terminationGracePeriodSeconds: 300
+      volumes:
+        {{- toYaml .Values.volumes | nindent 8 }}
+  volumeClaimTemplates:
+  - metadata:
+      name: prometheus-data
+      namespace: {{ .Values.namespace }}
+      {{- with .Values.labels}}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      storageClassName: {{ .Values.storageClassName }}
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.requestsStorage }}
