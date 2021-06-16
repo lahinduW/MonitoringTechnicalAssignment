@@ -17,7 +17,7 @@ In this prometheus monitoring set up contains following commonents
 
 ## Architecture overview
 
-![](https://monitoringdiagrams.s3.ap-southeast-1.amazonaws.com/prometheus_setup.png)
+![](https://monitoringdiagrams.s3.ap-southeast-1.amazonaws.com/PrometheusDiagram.png)
 
 ## Install
 
