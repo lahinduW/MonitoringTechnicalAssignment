@@ -128,4 +128,4 @@ templates:
         smarthost: smtp.gmail.com:587
         auth_username: prom.system.alerts@gmail.com
         auth_identity: prom.system.alerts@gmail.com
-        auth_password: Amila32*
+        auth_password: Amila33333*
